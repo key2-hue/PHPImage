@@ -1,3 +1,14 @@
+<?php
+  require_once(__DIR__ . '/functions.php');
+  require_once(__DIR__ . '/db.php');
+  require_once(__DIR__ . '/photo.php');
+
+  $upload = new \MyPhoto\Photo();
+  if($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $upload->submit();
+  }
+?>
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
