@@ -14,12 +14,13 @@ class Photo {
     try {
       $this->checkImage();
       $photo = $this->checkPhotoType();
-      $beforePhoto = $this->save($photo);
+      $originalFile = $_FILES['image']['name'];
+      $beforePhoto = $this->save($photo, $originalFile);
       $this->createPhoto($beforePhoto);
       $_SESSION['success'] = 'アップロードに成功しました';
     } catch(\Exception $e) {
       $_SESSION['failure'] = $e->getMessage();
-      exit;
+      // exit;
     }
     header('Location: http://' . $_SERVER['HTTP_HOST']);
     exit;
@@ -80,7 +81,7 @@ class Photo {
       case IMAGETYPE_GIF:
         return 'gif';
       case IMAGETYPE_JPEG:
-        return 'jpeg';
+        return 'jpg';
       case IMAGETYPE_PNG:
         return 'png';
       default:
@@ -88,13 +89,23 @@ class Photo {
     }
   }
 
-  private function save($photo) {
+  private function save($photo, $originalFile) {
+    $photoFirst = str_replace($photo,'', $originalFile);
+    var_dump($photoFirst);
     $this->photoName = sprintf(
-      '%s_%s.%s',
-      time(),
-      sha1(uniqid(mt_rand(), true)),
+      '%s%s',
+      $photoFirst,
       $photo
     );
+    $dir = 'photos/';
+    $doubleImage = scandir($dir);
+    foreach($doubleImage as $d) {
+      if(!is_dir($d)) {
+        if($originalFile === $d) {
+          throw new \Exception('同じ画像は投稿できません');
+        }
+      }
+    }
     $path = PHOTO_DIR . '/' . $this->photoName;
     $finalPath = move_uploaded_file($_FILES['image']['tmp_name'], $path);
     if($finalPath === false) {
@@ -124,7 +135,6 @@ class Photo {
         $formPhoto = imagecreatefrompng($beforePhoto);
         break;
     }
-    var_dump($this->photoType);
     $photoHeight = round($height * THUMB_WIDTH / $width);
     $image = imagecreatetruecolor(THUMB_WIDTH, $photoHeight);
     imagecopyresampled($image, $formPhoto, 0, 0, 0, 0, THUMB_WIDTH, $photoHeight, $width, $height);
