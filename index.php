@@ -6,12 +6,17 @@
 
   $upload = new \MyPhoto\Photo();
   if($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $upload->submit();
+    if($_POST['send'] === "create"){
+      $upload->submit();
+    } else {
+      
+    }
   }
 
   $photos = $upload->getPhotos();
 
   list($success, $failure) = $upload->judgement();
+  
 ?>
 
 <!DOCTYPE html>
@@ -24,6 +29,7 @@
 <body>
   
     <form action="<?php print $_SERVER['PHP_SELF']?>" method="post" enctype="multipart/form-data" id="form">
+      <input type="hidden" name="send" value="create">
       <input type="hidden" name="file_size" value="">
       <input type="file" name="image" id="file">
       <input type="submit" value="upload">
@@ -41,6 +47,10 @@
         <a href="<?php echo h(basename(PHOTO_DIR)) . '/' . basename($photo); ?>">
           <img src="<?php echo h($photo); ?>">
         </a>
+        <form action="<?php print $_SERVER['PHP_SELF']?>" method="post">
+          <input type="hidden" name="send" value="delete">
+          <input type="submit" value="削除する">
+        </form>
       </li>
     <?php endforeach; ?>
   </ul>

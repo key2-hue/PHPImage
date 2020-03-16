@@ -22,3 +22,18 @@ li {
   width:300px;
   margin-bottom: 20px;
 }
+
+.flash {
+  position: relative;
+  bottom: 40px;
+  color: #fff;
+  width:calc(100vw - 20px);
+}
+
+.success {
+  background-color: limegreen;
+}
+
+.failure {
+  background-color: red;
+}

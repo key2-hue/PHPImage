@@ -10,6 +10,8 @@ class Photo {
   private $photoName;
   private $photoType;
   private $photoLast;
+  private $photoDir = "photos/";
+  private $thumbDir = "thumbs/";
 
   public function submit() {
     try {
@@ -18,28 +20,27 @@ class Photo {
       $photo = $this->checkPhotoType($originalFile);
       $beforePhoto = $this->save($originalFile);
       $this->createPhoto($beforePhoto);
-      $_SESSION['success'] = 'アップロードに成功しました';
+      $_SESSION['good'] = 'アップロードに成功しました';
     } catch(\Exception $e) {
-      $_SESSION['failure'] = $e->getMessage();
-      // exit;
+      $_SESSION['bad'] = $e->getMessage();
     }
-    header('Location: http://' . $_SERVER['HTTP_HOST']);
-    exit;
+    // header('Location: http://' . $_SERVER['HTTP_HOST']);
+    // exit;
   }
 
   public function getPhotos() {
     $photos = [];
     $photoAll = [];
-    $dir = opendir(PHOTO_DIR);
+    $dir = opendir($this->photoDir);
     while (false !== ($photo = readdir($dir))) {
       if($photo === '.' || $photo === '..') {
         continue;
       }
       $photoAll[] = $photo;
-      if(file_exists(THUMB_DIR . '/' . $photo)) {
-        $photos[] = basename(THUMB_DIR) . '/' . $photo;
+      if(file_exists($this->thumbDir . $photo)) {
+        $photos[] = $this->thumbDir . $photo;
       } else {
-        $photos[] = basename(PHOTO_DIR) . '/' . $photo;
+        $photos[] = $this->photoDir . $photo;
       }
     }
     array_multisort($photoAll, SORT_DESC, $photos);
@@ -47,33 +48,33 @@ class Photo {
   }
 
   public function judgement() {
-    $success = null;
-    $failure = null;
-    if(isset($_SESSION['success'])) {
-      $success = $_SESSION['success'];
-      unset($_SESSION['success']);
+    $good = null;
+    $bad = null;
+    if(isset($_SESSION['good'])) {
+      $good = $_SESSION['good'];
+      unset($_SESSION['good']);
     }
-    if(isset($_SESSION['failure'])) {
-      $failure = $_SESSION['failure'];
-      unset($_SESSION['failure']);
+    if(isset($_SESSION['bad'])) {
+      $bad = $_SESSION['bad'];
+      unset($_SESSION['bad']);
     }
-    return [$success, $failure];
+    return [$good, $bad];
   }
 
   private function checkImage() {
-    if(!isset($_FILES['image']) || !isset($_FILES['image']['error'])) {
+    if(isset($_FILES['image']) && isset($_FILES['image']['error'])) {
+      switch($_FILES['image']['error']) {
+        case UPLOAD_ERR_OK:
+          return true;
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+          throw new \Exception('ファイルが大きすぎます');
+        default:
+          throw new \Exception('Error' . $_FILES['image']['error']);
+      }
+    } else {
       throw new \Exception('画像にエラーが出ています');
-    }
-
-    switch($_FILES['image']['error']) {
-      case UPLOAD_ERR_OK:
-        return true;
-      case UPLOAD_ERR_INI_SIZE:
-      case UPLOAD_ERR_FORM_SIZE:
-        throw new \Exception('ファイルが大きすぎます');
-      default:
-        throw new \Exception('Error' . $_FILES['image']['error']);
-    }
+    } 
   }
 
   private function checkPhotoType($originalFile) {
@@ -106,7 +107,7 @@ class Photo {
         }
       }
     }
-    $path = PHOTO_DIR . '/' . $this->photoName;
+    $path = $this->photoDir . $this->photoName;
     $finalPath = move_uploaded_file($_FILES['image']['tmp_name'], $path);
     if($finalPath === false) {
       throw new \Exception('アップロードされていません');
@@ -141,13 +142,13 @@ class Photo {
 
     switch($this->photoType) {
       case IMAGETYPE_GIF:
-        imagegif($image, THUMB_DIR . '/' . $this->photoName);
+        imagegif($image, $this->thumbDir . $this->photoName);
         break;
       case IMAGETYPE_JPEG:
-        imagejpeg($image, THUMB_DIR . '/' . $this->photoName);
+        imagejpeg($image, $this->thumbDir . $this->photoName);
         break;
       case IMAGETYPE_PNG:
-        imagepng($image, THUMB_DIR . '/' . $this->photoName);
+        imagepng($image, $this->thumbDir . $this->photoName);
         break;
     }
   }
