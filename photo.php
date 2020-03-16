@@ -10,7 +10,7 @@ class Photo {
   private $photoName;
   private $photoType;
   private $photoLast;
-  private $photoDir = "photos/";
+  public $photoDir = "photos/";
   private $thumbDir = "thumbs/";
 
   public function submit() {
@@ -24,9 +24,21 @@ class Photo {
     } catch(\Exception $e) {
       $_SESSION['bad'] = $e->getMessage();
     }
-    // header('Location: http://' . $_SERVER['HTTP_HOST']);
-    // exit;
+    header('Location: http://' . $_SERVER['HTTP_HOST']);
+    exit;
   }
+
+  public function deleteFile($deleteFile) {
+    if(!empty($deleteFile)) {
+      unlink($deleteFile);
+      echo $deleteFile;
+      $photoDelete = str_replace('thumbs/','photos/', $deleteFile);
+      unlink($photoDelete);
+      }
+    header('Location: http://' . $_SERVER['HTTP_HOST']);
+    exit;
+  }
+  
 
   public function getPhotos() {
     $photos = [];

@@ -8,15 +8,16 @@
   if($_SERVER['REQUEST_METHOD'] === 'POST') {
     if($_POST['send'] === "create"){
       $upload->submit();
-    } else {
-      
+    } elseif($_POST['send'] === "delete") {
+      $deleteFile =  $_POST['deleteFile'];
+      $upload->deleteFile($deleteFile);
     }
   }
 
   $photos = $upload->getPhotos();
 
   list($success, $failure) = $upload->judgement();
-  
+  $photoDir = $upload->photoDir;
 ?>
 
 <!DOCTYPE html>
@@ -44,12 +45,13 @@
   <ul>
     <?php foreach($photos as $photo): ?>
       <li>
-        <a href="<?php echo h(basename(PHOTO_DIR)) . '/' . basename($photo); ?>">
+        <a href="<?php echo h($photoDir) . basename($photo); ?>">
           <img src="<?php echo h($photo); ?>">
         </a>
         <form action="<?php print $_SERVER['PHP_SELF']?>" method="post">
+          <input type="hidden" name="deleteFile" value="<?php echo $photo ?>">
           <input type="hidden" name="send" value="delete">
-          <input type="submit" value="削除する">
+          <input type="submit"  class="image" value="削除する">
         </form>
       </li>
     <?php endforeach; ?>
