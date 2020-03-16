@@ -9,13 +9,14 @@ require_once(__DIR__ . '/db.php');
 class Photo {
   private $photoName;
   private $photoType;
+  private $photoLast;
 
   public function submit() {
     try {
       $this->checkImage();
-      $photo = $this->checkPhotoType();
       $originalFile = $_FILES['image']['name'];
-      $beforePhoto = $this->save($photo, $originalFile);
+      $photo = $this->checkPhotoType($originalFile);
+      $beforePhoto = $this->save($originalFile);
       $this->createPhoto($beforePhoto);
       $_SESSION['success'] = 'アップロードに成功しました';
     } catch(\Exception $e) {
@@ -75,28 +76,27 @@ class Photo {
     }
   }
 
-  private function checkPhotoType() {
+  private function checkPhotoType($originalFile) {
     $this->photoType = exif_imagetype($_FILES['image']['tmp_name']);
+    $originalFile = $_FILES['image']['name'];
     switch($this->photoType) {
       case IMAGETYPE_GIF:
-        return 'gif';
+        $this->photoLast =  '.gif';
+        break;
       case IMAGETYPE_JPEG:
-        return 'jpg';
+        $this->photoLast =  '.jpg';
+        break;
       case IMAGETYPE_PNG:
-        return 'png';
+        $this->photoLast = '.png';
+        break;
       default:
         throw new \Exception('画像の種類が間違っています!');
     }
+    $photoFirst = str_replace($this->photoLast,'', $originalFile);
+    $this->photoName = $photoFirst . $this->photoLast;
   }
 
-  private function save($photo, $originalFile) {
-    $photoFirst = str_replace($photo,'', $originalFile);
-    var_dump($photoFirst);
-    $this->photoName = sprintf(
-      '%s%s',
-      $photoFirst,
-      $photo
-    );
+  private function save($originalFile) {
     $dir = 'photos/';
     $doubleImage = scandir($dir);
     foreach($doubleImage as $d) {
