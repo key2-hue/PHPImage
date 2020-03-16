@@ -16,9 +16,9 @@ class Photo {
       $photo = $this->checkPhotoType();
       $beforePhoto = $this->save($photo);
       $this->createPhoto($beforePhoto);
-      
+      $_SESSION['success'] = 'アップロードに成功しました';
     } catch(\Exception $e) {
-      echo $e->getMessage();
+      $_SESSION['failure'] = $e->getMessage();
       exit;
     }
     header('Location: http://' . $_SERVER['HTTP_HOST']);
@@ -28,7 +28,34 @@ class Photo {
   public function getPhotos() {
     $photos = [];
     $photoAll = [];
-    
+    $dir = opendir(PHOTO_DIR);
+    while (false !== ($photo = readdir($dir))) {
+      if($photo === '.' || $photo === '..') {
+        continue;
+      }
+      $photoAll[] = $photo;
+      if(file_exists(THUMB_DIR . '/' . $photo)) {
+        $photos[] = basename(THUMB_DIR) . '/' . $photo;
+      } else {
+        $photos[] = basename(PHOTO_DIR) . '/' . $photo;
+      }
+    }
+    array_multisort($photoAll, SORT_DESC, $photos);
+    return $photos;
+  }
+
+  public function judgement() {
+    $success = null;
+    $failure = null;
+    if(isset($_SESSION['success'])) {
+      $success = $_SESSION['success'];
+      unset($_SESSION['success']);
+    }
+    if(isset($_SESSION['failure'])) {
+      $failure = $_SESSION['failure'];
+      unset($_SESSION['failure']);
+    }
+    return [$success, $failure];
   }
 
   private function checkImage() {

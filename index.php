@@ -1,4 +1,5 @@
 <?php
+  session_start();
   require_once(__DIR__ . '/functions.php');
   require_once(__DIR__ . '/db.php');
   require_once(__DIR__ . '/photo.php');
@@ -8,7 +9,9 @@
     $upload->submit();
   }
 
-  $photo = $upload->getPhotos();
+  $photos = $upload->getPhotos();
+
+  list($success, $failure) = $upload->judgement();
 ?>
 
 <!DOCTYPE html>
@@ -19,10 +22,29 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <form action="" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="file_size" value="">
-    <input type="file" name="image">
-    <input type="submit" value="upload">
-  </form>
+  
+    <form action="<?php print $_SERVER['PHP_SELF']?>" method="post" enctype="multipart/form-data" id="form">
+      <input type="hidden" name="file_size" value="">
+      <input type="file" name="image" id="file">
+      <input type="submit" value="upload">
+    </form>
+  
+  <?php if(isset($success)): ?>
+    <div class="flash success"><?php echo h($success); ?></div>
+  <?php endif; ?>
+  <?php if(isset($failure)): ?>
+    <div class="flash failure"><?php echo h($failure); ?></div>
+  <?php endif; ?>
+  <ul>
+    <?php foreach($photos as $photo): ?>
+      <li>
+        <a href="<?php echo h(basename(PHOTO_DIR)) . '/' . basename($photo); ?>">
+          <img src="<?php echo h($photo); ?>">
+        </a>
+      </li>
+    <?php endforeach; ?>
+  </ul>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="index.js"></script>
 </body>
 </html>
