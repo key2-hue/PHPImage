@@ -1,9 +1,14 @@
 <?php
 
+
+
 namespace MyPhoto;
+
+require_once(__DIR__ . '/db.php');
 
 class Photo {
   private $photoName;
+  private $photoType;
 
   public function submit() {
     try {
@@ -11,12 +16,19 @@ class Photo {
       $photo = $this->checkPhotoType();
       $beforePhoto = $this->save($photo);
       $this->createPhoto($beforePhoto);
+      
     } catch(\Exception $e) {
       echo $e->getMessage();
       exit;
     }
     header('Location: http://' . $_SERVER['HTTP_HOST']);
     exit;
+  }
+
+  public function getPhotos() {
+    $photos = [];
+    $photoAll = [];
+    
   }
 
   private function checkImage() {
@@ -36,8 +48,8 @@ class Photo {
   }
 
   private function checkPhotoType() {
-    $photoType = exif_imagetype($_FILES['image']['tmp_name']);
-    switch($photoType) {
+    $this->photoType = exif_imagetype($_FILES['image']['tmp_name']);
+    switch($this->photoType) {
       case IMAGETYPE_GIF:
         return 'gif';
       case IMAGETYPE_JPEG:
@@ -68,6 +80,38 @@ class Photo {
     $photoSize = getimagesize($beforePhoto);
     $width = $photoSize[0];
     $height = $photoSize[1];
-    if 
+    if ($width > THUMB_WIDTH) {
+      $this->createPhotoType($beforePhoto, $width, $height);
+    }
+  }
+
+  private function createPhotoType($beforePhoto, $width, $height) {
+    switch($this->photoType) {
+      case IMAGETYPE_GIF:
+        $formPhoto = imagecreatefromgif($beforePhoto);
+        break;
+      case IMAGETYPE_JPEG:
+        $formPhoto = imagecreatefromjpeg($beforePhoto);
+        break;
+      case IMAGETYPE_PNG:
+        $formPhoto = imagecreatefrompng($beforePhoto);
+        break;
+    }
+    var_dump($this->photoType);
+    $photoHeight = round($height * THUMB_WIDTH / $width);
+    $image = imagecreatetruecolor(THUMB_WIDTH, $photoHeight);
+    imagecopyresampled($image, $formPhoto, 0, 0, 0, 0, THUMB_WIDTH, $photoHeight, $width, $height);
+
+    switch($this->photoType) {
+      case IMAGETYPE_GIF:
+        imagegif($image, THUMB_DIR . '/' . $this->photoName);
+        break;
+      case IMAGETYPE_JPEG:
+        imagejpeg($image, THUMB_DIR . '/' . $this->photoName);
+        break;
+      case IMAGETYPE_PNG:
+        imagepng($image, THUMB_DIR . '/' . $this->photoName);
+        break;
+    }
   }
 }

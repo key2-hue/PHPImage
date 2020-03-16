@@ -7,6 +7,8 @@
   if($_SERVER['REQUEST_METHOD'] === 'POST') {
     $upload->submit();
   }
+
+  $photo = $upload->getPhotos();
 ?>
 
 <!DOCTYPE html>
